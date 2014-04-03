@@ -1,0 +1,7 @@
+simple web-crawler
+
+Run:
+1. need to intall curl lib 
+2. install curlpp lib first in /usr/local/lib or change directory in Makefile
+2. $ make
+3. $ ./web-crawler

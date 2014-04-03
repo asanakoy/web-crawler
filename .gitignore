@@ -1,0 +1,12 @@
+*.out
+*.o
+*.tmp
+*.bak
+
+# Qt-creator
+*.config
+*.creator.*
+*.files
+*.includes
+
+*.directory

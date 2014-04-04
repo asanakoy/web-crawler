@@ -10,3 +10,4 @@
 *.includes
 
 *.directory
+curlpp/

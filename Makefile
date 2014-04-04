@@ -1,5 +1,5 @@
 DEPS = 
-CXXFLAGS=
+CXXFLAGS=-std=c++11
 HTMLCXX_SOURCES_ROOT=htmlcxx/html
 
 OBJ=main.o ParserDom.o ParserSax.o Node.o

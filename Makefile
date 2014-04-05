@@ -8,24 +8,28 @@ CURLPP_DIR=curlpp
 CURLPP_INCLUDE_DIR=$(CURLPP_DIR)/include
 CURLPP_LIB_ROOT=$(CURLPP_DIR)/src/curlpp/
 
-LD=g++ -g -W -Wall -Werror
-#-I$(CURL_LIB_INCLUDE)
 
-#its imoportant that you link the libcurlpp.a!
-# LD_FLAGS=-L$(CURLPP_LIB_ROOT) $(CURLPP_LIB_ROOT)/libcurlpp.a -lstdc++ -lcurl 
-#-pthread
+LD_FLAGS_MAC=-L$(CURLPP_LIB_ROOT) -lcurlpp -static -lstdc++ -lcurl -lssl -lcrypto
+LD_FLAGS_LINUX=-L$(CURLPP_LIB_ROOT) -lcurlpp -static -lstdc++ -lcurl -pthread
 
-LD_FLAGS=-L$(CURLPP_LIB_ROOT) -lcurlpp -static -lstdc++ -lcurl -lssl -lcrypto
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	LD_FLAGS = $(LD_FLAGS_LINUX)
+	LIBTOOL = libtool
+endif
+ifeq ($(UNAME_S),Darwin)
+	LD_FLAGS = $(LD_FLAGS_MAC)
+	LIBTOOL = $(CURLPP_DIR)/libtool
+endif
 
 EXECUTABLE=webCrawler.out
 
 SHA2_DIR = sha256
 
-all: $(EXECUTABLE)
+all: curlpp $(EXECUTABLE)
 	
-#$(EXECUTABLE): curlpp $(OBJ) $(SHA2_DIR)/sha256.o;  $(LD) -o $@ $^  $(LD_FLAGS)
 $(EXECUTABLE): $(OBJ) $(SHA2_DIR)/sha256.o
-	$(CURLPP_DIR)/libtool --silent --tag=CXX   --mode=link g++  -g  -W -Wall  -static  -o $@ $^  $(LD_FLAGS)
+	$(LIBTOOL) --silent --tag=CXX   --mode=link g++  -g  -W -Wall  -static  -o $@ $^  $(LD_FLAGS)
 
 .PHONY: $(SHA2_DIR)/sha256.o
 $(SHA2_DIR)/sha256.o:
@@ -40,7 +44,7 @@ Node.o:
 	
 %.o: %.cc $(DEPS)    ;  g++ $(CXXFLAGS) -c $< -o $@
 
-# .PHONY: curlpp
+.PHONY: curlpp
 curlpp:
 	cd $(CURLPP_DIR) && ./configure --enable-ewarning=no
 	$(MAKE) -C $(CURLPP_DIR)

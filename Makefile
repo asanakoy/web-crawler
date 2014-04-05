@@ -2,7 +2,7 @@ DEPS =
 CXXFLAGS=-std=c++11 -I$(CURLPP_INCLUDE_DIR)
 HTMLCXX_SOURCES_ROOT=htmlcxx/html
 
-OBJ=main.o ParserDom.o ParserSax.o Node.o
+OBJ=main.o ParserSax.o Node.o WebCrawler.o
 
 CURLPP_DIR=curlpp
 CURLPP_INCLUDE_DIR=$(CURLPP_DIR)/include
@@ -26,7 +26,7 @@ EXECUTABLE=webCrawler.out
 
 SHA2_DIR = sha256
 
-all: curlpp $(EXECUTABLE)
+all: $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJ) $(SHA2_DIR)/sha256.o
 	$(LIBTOOL) --silent --tag=CXX   --mode=link g++  -g  -W -Wall  -static  -o $@ $^  $(LD_FLAGS)
@@ -42,7 +42,7 @@ ParserSax.o:
 Node.o:
 	g++ $(CXXFLAGS) -c $(HTMLCXX_SOURCES_ROOT)/Node.cc -o $@
 	
-%.o: %.cc $(DEPS)    ;  g++ $(CXXFLAGS) -c $< -o $@
+%.o: %.cc  ;  g++ $(CXXFLAGS) -c $< -o $@
 
 .PHONY: curlpp
 curlpp:

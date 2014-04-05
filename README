@@ -2,5 +2,6 @@ simple web-crawler
 
 Run:
 1. need to intall curl lib 
-2. $ make
-3. $ ./web-crawler
+2. $ make curlpp
+3. $ make
+4. $ ./web-crawler

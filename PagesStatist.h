@@ -7,18 +7,33 @@
 
 #include "WebCrawler.h"
 
-class PagesStatict {
+class PagesStatist {
 public:
 	typedef double PR;
 
 	void PagesStatict(const std::string& pagesDataFilePath);
+
 	void CalculatePageRank();
-	void GetTopPages(std::vector<std::string>& oTopPages);
+
+	// Get n top pages by PR
+	void GetTopPages(size_t n, std::vector<Url>& oTopPages);
+
+	/*
+	 * Returns Unordered vector with sizes of the pages in bytes
+	 */	
+	void GetPageSizesInBytes(std::vector<size_t>& oSizes);
+
+	/*
+	 * Returns Unordered vector with count of outgoing link for pages
+	 */	
+	void GetPagesOutgoingLinksCount(std::vector<size_t>& oLinksCount)
 
 protected:
 	std::vector<Url> urls_;
-	std::vector<PageDetails> pageDetails;
-	std::vector<std::pair<PageDetails::PageId, PR> > idsSortedbByPr;
+	std::vector<PageDetails> pageDetails_;
+	std::vector<PR> pageRank_;
+	std::std::vector<size_t> pagesOutgoingLinksCount_;
+	std::vector<std::pair<PageDetails::PageId, PR> > idsSortedbByPr_;
 };
 
 #endif // TMK_PAGES_STATIST_H

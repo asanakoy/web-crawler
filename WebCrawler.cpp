@@ -43,7 +43,7 @@ void WebCrawler::downloadPage(const std::string& url, std::string& oPage) {
 WebCrawler::WebCrawler(std::size_t numberOfUrls)
     : ParserSax()
     , globalUrlPreffix_("")
-    , urlRegex_("(.*simple\\.wikipedia\\.org)?(/wiki/.*)")
+    , urlRegex_("(.*simple\\.wikipedia\\.org)?(/wiki/.*)(#.*)?") // TODO test this
     , urls_(numberOfUrls)
     , currentDistanceFromMain_(0)
     , currentUrl_("")

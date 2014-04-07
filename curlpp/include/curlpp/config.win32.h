@@ -61,7 +61,8 @@
 #undef PACKAGE_VERSION
 
 /* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS
-
+#ifndef STDC_HEADERS
+  #define STDC_HEADERS
+#endif
 /* Version number of package */
 #define VERSION 0.7.2

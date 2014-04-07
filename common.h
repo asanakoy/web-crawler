@@ -7,6 +7,7 @@
 
 #define TMK_LOG(...) Logger::writeToLog(__VA_ARGS__)
 #define TMK_FLOG(...) Logger::writeToFileLog(__VA_ARGS__)
+#define TMK_LOG_ALL(...) do {Logger::writeToLog(__VA_ARGS__); Logger::writeToFileLog(__VA_ARGS__);} while(0)
 
 class Logger {
 public:

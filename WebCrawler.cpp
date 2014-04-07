@@ -16,11 +16,11 @@ void WebCrawler::setDownloadInterval(unsigned ms) {
 void WebCrawler::downloadPage(const std::string& url, std::string& oPage) {
         // That's all that is needed to do cleanup of used resources (RAII style).
         std::ostringstream os;
-        TMK_LOG("Downloading url %zu: %s\n", pagesDownloadedCounter_, url.c_str());
+        TMK_LOG_ALL("Downloading url %zu: %s\n", pagesDownloadedCounter_, url.c_str());
         
         unsigned delay = difftime(time(NULL), lastDownloadTime_) * 1000;
         if (delay < downloadInterval_ ) {
-            TMK_LOG("sleeping %d ms\n", downloadInterval_ - delay);
+            TMK_LOG_ALL("sleeping %d ms\n", downloadInterval_ - delay);
             usleep((downloadInterval_ - delay)*1000);
         }
        
@@ -70,7 +70,7 @@ void WebCrawler::clearAll() {
 }
 
 bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
-    TMK_LOG("Starting crawling...\n");    
+    TMK_LOG_ALL("Starting crawling...\n");    
     clearAll();
     boost::smatch result;
     if (!boost::regex_match(mainPageUrl, result, 
@@ -85,7 +85,7 @@ bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
     
     std::string url;
     std::string page;
-    while (!urlQueue_.empty() && pagesDownloadedCounter_ < 30) {
+    while (!urlQueue_.empty() /*&& pagesDownloadedCounter_ < 30*/) {
         currentUrl_ = urlQueue_.front().first;
         currentDistanceFromMain_ = urlQueue_.front().second;
         urlQueue_.pop();
@@ -96,15 +96,15 @@ bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
             parse(page);
         }
         catch (curlpp::RuntimeError &e) {
-            TMK_LOG("RuntimeError: %s\n", e.what());
+            TMK_LOG_ALL("RuntimeError: %s\n", e.what());
         }
         catch (curlpp::LogicError &e) {
-            TMK_LOG("LogicError: %s\n", e.what());
+            TMK_LOG_ALL("LogicError: %s\n", e.what());
         }
         
     }
-    TMK_LOG("Crawling successfully finished!\n"); 
-    TMK_LOG("Pages downloaded: %zu\n", pagesDownloadedCounter_); 
+    TMK_LOG_ALL("Crawling successfully finished!\n"); 
+    TMK_LOG_ALL("Pages downloaded: %zu\n", pagesDownloadedCounter_); 
     return true;
 }
 
@@ -149,7 +149,7 @@ void WebCrawler::foundTag(htmlcxx::HTML::Node node, bool isEnd) {
 }
 
 void WebCrawler::saveToDisk() {
-    TMK_LOG("Saving page data to file\n"); 
+    TMK_LOG_ALL("Saving page data to file\n"); 
     FILE* urlsMapFile;
     urlsMapFile = fopen("pagesData.txt", "w");
     for (auto it = urls_.begin(); it!=urls_.end(); ++it)
@@ -168,5 +168,5 @@ void WebCrawler::saveToDisk() {
         fprintf(urlsMapFile, "\n");
     }
     fclose(urlsMapFile);
-    TMK_LOG("Page data have been successfully saved to file\n"); 
+    TMK_LOG_ALL("Page data have been successfully saved to file\n"); 
 }

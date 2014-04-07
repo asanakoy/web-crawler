@@ -8,6 +8,23 @@
 
 #include "htmlcxx/html/ParserDom.h"
 
+typedef std::string Url;
+
+struct PageDetails {
+    typedef size_t PageId
+    typedef size_t ClickDistance;
+
+    PageDetails(size_t id = 0, size_t distanceFromMain = 0, size_t sizeInBytes = 0) 
+    : id_(id)
+    , distanceFromMain_(distanceFromMain)
+    , sizeInBytes_(sizeInBytes) {}
+    
+    PageId id_;
+    ClickDistance distanceFromMain_;
+    size_t sizeInBytes_;
+    std::vector<size_t> outgoingLinks_;
+};
+
 class WebCrawler: public htmlcxx::HTML::ParserSax {
 public:
     WebCrawler(std::size_t numberOfUrls);
@@ -18,22 +35,12 @@ public:
     
     bool startCrawl(const std::string& mainPageUrl);
     
-    struct PageDetails {
-        PageDetails(size_t id = 0, size_t distanceFromMain = 0, size_t sizeInBytes = 0) 
-        : id_(id)
-        , distanceFromMain_(distanceFromMain)
-        , sizeInBytes_(sizeInBytes) {}
-        
-        size_t id_;
-        size_t distanceFromMain_;
-        size_t sizeInBytes_;
-        std::vector<size_t> outgoingLinks_;
-    };
+    
     
     void saveToDisk();
     
     
-    typedef std::unordered_map<std::string, PageDetails> UrlsHashTable;
+    typedef std::unordered_map<Url, PageDetails> UrlsHashTable;
 
 protected:
     void clearAll();
@@ -48,8 +55,8 @@ protected:
     boost::regex urlRegex_;
     UrlsHashTable urls_;
     size_t currentDistanceFromMain_; // current Distance From the Main page in clicks
-    std::string currentUrl_;
-    std::queue<std::pair<std::string, size_t> > urlQueue_; // pairs (url, distance_from_main_page)
+    Url currentUrl_;
+    std::queue<std::pair<Url, PageDetails::ClickDistance> > urlQueue_; // pairs (url, distance_from_main_page)
     size_t pagesDownloadedCounter_;
     std::time_t lastDownloadTime_;
     unsigned downloadInterval_;

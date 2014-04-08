@@ -13,6 +13,10 @@ void WebCrawler::setDownloadInterval(unsigned ms) {
     downloadInterval_ = ms;
 }
 
+void WebCrawler::setPagesDir(const char* pagesDir) {
+    strcpy(pagesDir_, pagesDir);
+}
+
 void WebCrawler::downloadPage(const std::string& url, std::string& oPage) {
         // That's all that is needed to do cleanup of used resources (RAII style).
         std::ostringstream os;
@@ -25,34 +29,38 @@ void WebCrawler::downloadPage(const std::string& url, std::string& oPage) {
         }
        
         time(&lastDownloadTime_);
-        
+        pagesDownloadedCounter_++;
         os << curlpp::options::Url(url) << std::endl;
         
         oPage = os.str();
         
         char fileName[256];
-        sprintf(fileName, "pages/%zu.html", pagesDownloadedCounter_);
-        FILE *pFile;
-        pFile = fopen(fileName, "w");
+        sprintf(fileName, "%s/%zu.html", pagesDir_, pagesDownloadedCounter_);
+        FILE *pFile = fopen(fileName, "w");
+        if (!pFile) {
+            TMK_LOG_ALL("Error: failed to open file for writing %s\n", fileName);
+            return;
+        }
         fprintf (pFile, "%s", oPage.c_str());
         fclose (pFile);
-        pagesDownloadedCounter_++;
 }
 
 
 WebCrawler::WebCrawler(std::size_t numberOfUrls)
     : ParserSax()
     , globalUrlPreffix_("")
-    , urlRegex_("(.*simple\\.wikipedia\\.org)?(/wiki/.*)(#.*)?") // TODO test this
+    , urlRegex_("(.*simple\\.wikipedia\\.org)?(/wiki/.*?)(#.*)?")
     , urls_(numberOfUrls)
     , currentDistanceFromMain_(0)
     , currentUrl_("")
     , pagesDownloadedCounter_(0)
     , lastDownloadTime_(0)
     , downloadInterval_(0)
+    , minutesTimeStamp_(0)
+    , downloadErrorsCount_(0)
     {
         curlpp::initialize(CURL_GLOBAL_ALL);    
-        ;
+        setPagesDir("data/pages");
     }
 
 WebCrawler::~WebCrawler() {
@@ -67,14 +75,19 @@ void WebCrawler::clearAll() {
     urls_.clear();
     urlQueue_ = std::queue<std::pair<std::string, size_t> >();
     lastDownloadTime_ = 0;
+    minutesTimeStamp_ = 0;
+    downloadErrorsCount_ = 0;
 }
 
 bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
     TMK_LOG_ALL("Starting crawling...\n");    
     clearAll();
+    time_t t = time(NULL);
+    struct tm *tmp = gmtime(&t);
+    minutesTimeStamp_ = tmp->tm_min;
     boost::smatch result;
     if (!boost::regex_match(mainPageUrl, result, 
-        boost::regex("(.*simple\\.wikipedia\\.org)(/wiki/.*)(#.*)"))) {
+        boost::regex("(.*simple\\.wikipedia\\.org)(/wiki/.*?)(#.*)?"))) {
         std::cout << "Incorrect start page url :(\nI have ability to parse only articles of http://simple.wikipedia.org/\n";
         return false;
     }
@@ -92,19 +105,29 @@ bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
 
         try {
             downloadPage(currentUrl_, page);
-            urls_[currentUrl_].sizeInBytes_ = sizeof(page.c_str());
+            urls_[currentUrl_].sizeInBytes_ = strlen(page.c_str());
             parse(page);
         }
         catch (curlpp::RuntimeError &e) {
             TMK_LOG_ALL("RuntimeError: %s\n", e.what());
+            downloadErrorsCount_++;
         }
         catch (curlpp::LogicError &e) {
             TMK_LOG_ALL("LogicError: %s\n", e.what());
+            downloadErrorsCount_++;
+        }
+        
+        if (pagesDownloadedCounter_ % 10000 == 0) {
+            // If something goes wrong we will have some piece of data.
+            char filename[256];
+            sprintf(filename, "data/pagesData_%zu", pagesDownloadedCounter_ / 10000);
+            saveToDisk(filename);
         }
         
     }
     TMK_LOG_ALL("Crawling successfully finished!\n"); 
     TMK_LOG_ALL("Pages downloaded: %zu\n", pagesDownloadedCounter_); 
+    TMK_LOG_ALL("Download errors occured: %zu\n", downloadErrorsCount_);
     return true;
 }
 
@@ -148,10 +171,15 @@ void WebCrawler::foundTag(htmlcxx::HTML::Node node, bool isEnd) {
     }
 }
 
-void WebCrawler::saveToDisk() {
-    TMK_LOG_ALL("Saving page data to file\n"); 
-    FILE* urlsMapFile;
-    urlsMapFile = fopen("pagesData.txt", "w");
+void WebCrawler::saveToDisk(const char* filePath) {
+    TMK_LOG_ALL("Saving page data to file %s\n", filePath); 
+    FILE* urlsMapFile = fopen(filePath, "w");
+    if (!urlsMapFile) {
+        TMK_LOG_ALL("Error: failed to open file for writing %s\n", filePath);
+        return;
+    }
+    
+    fprintf(urlsMapFile, "%zu\n", urls_.size());   
     for (auto it = urls_.begin(); it!=urls_.end(); ++it)
     {
         fprintf(urlsMapFile, "%s \t %zu \t %zu \t %zu \t", 
@@ -168,5 +196,5 @@ void WebCrawler::saveToDisk() {
         fprintf(urlsMapFile, "\n");
     }
     fclose(urlsMapFile);
-    TMK_LOG_ALL("Page data have been successfully saved to file\n"); 
+    TMK_LOG_ALL("Page data have been successfully saved!\n"); 
 }

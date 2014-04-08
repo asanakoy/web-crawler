@@ -7,33 +7,51 @@
 
 #include "WebCrawler.h"
 
+typedef double PR;
+    
 class PagesStatist {
 public:
-	typedef double PR;
 
-	PagesStatist(const std::string& pagesDataFilePath);
-
-	void calculatePageRank();
+	PagesStatist(const char* pagesDataFilePath);
 
 	// Get n top pages by PR
-	void getTopPages(size_t n, std::vector<Url>& oTopPages);
-
+	void getTopPages(size_t n, std::vector<std::pair<Url, PR> >& oTopPages) const;
+    
+//     const std::vector<std::pair<PageDetails::PageId, PR> > get
+    
+    // Get PR
+    const std::vector<PR>& getPageRank() const;
+    
 	/*
-	 * Returns Unordered vector with sizes of the pages in bytes
+	 * Vector with sizes of the pages in bytes
 	 */	
-	void getPageSizesInBytes(std::vector<size_t>& oSizes);
-
+	const std::vector<size_t>& getPageSizesInBytes() const;
+    
 	/*
-	 * Returns Unordered vector with count of outgoing link for pages
+	 * Vector with count of outgoing link for pages
 	 */	
-	const std::vector<size_t>& getPagesOutgoingLinksCount();
-
+	const std::vector<size_t>& getPagesOutgoingLinksCount() const;
+    
+    /*
+     * Vector with count of incoming link for pages
+     */ 
+    const std::vector<size_t>& getPagesIncomingLinksCount() const;
+    
+    const std::string& GetUrlById(PageDetails::PageId id) const;
+    
 protected:
+    void calculatePageRank() const;
+    
+    bool greater(const std::pair<PageDetails::PageId, PR>& a,
+                 const std::pair<PageDetails::PageId, PR>& b) const;
+        
 	std::vector<Url> urls_;
 	std::vector<PageDetails> pageDetails_;
-	std::vector<PR> pageRank_;
-	std::vector<size_t> pagesOutgoingLinksCount_;
-	std::vector<std::pair<PageDetails::PageId, PR> > idsSortedbByPr_;
+	mutable std::vector<PR> pageRank_;
+    mutable std::vector<size_t> pagesSizes_; //sizes in bytes
+	mutable std::vector<size_t> pagesOutgoingLinksCount_;
+    mutable std::vector<size_t> pagesIncomingLinksCount_;
+	mutable std::vector<std::pair<PageDetails::PageId, PR> > idsSortedbByPr_;
 };
 
 #endif // TMK_PAGES_STATIST_H

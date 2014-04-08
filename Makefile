@@ -29,7 +29,7 @@ EXECUTABLE=webCrawler.out
 all: $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJ)
-	$(LIBTOOL) --silent --tag=CXX   --mode=link g++  -g  -W -Wall  -static  -o $@ $^  $(LD_FLAGS)
+	$(LIBTOOL) --silent --tag=CXX   --mode=link g++ -g -W -Wall  -static  -o $@ $^  $(LD_FLAGS)
 
 # .PHONY: $(SHA2_DIR)/sha256.o
 # $(SHA2_DIR)/sha256.o:
@@ -42,10 +42,11 @@ ParserSax.o: $(HTMLCXX_SOURCES_ROOT)/ParserSax.cc
 Node.o: $(HTMLCXX_SOURCES_ROOT)/Node.cc
 	g++ $(CXXFLAGS) -c $< -o $@
 	
-WebCrawler.o: WebCrawler.cpp
-	g++ $(CXXFLAGS) -c $< -o $@ $(LD_FLAGS)
+WebCrawler.o: WebCrawler.cpp WebCrawler.h
+	g++ -g $(CXXFLAGS) -c $< -o $@ $(LD_FLAGS)
 	
-%.o: %.cpp  ;  g++ $(CXXFLAGS) -c $< -o $@
+%.o: %.cpp %.h
+	g++ -g $(CXXFLAGS) -c $< -o $@
 
 .PHONY: curlpp
 curlpp:

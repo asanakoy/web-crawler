@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <queue>
+#include <ctime>
 
 #include "htmlcxx/html/ParserDom.h"
 
@@ -34,12 +35,18 @@ public:
     
     void setDownloadInterval(unsigned ms);
     
+    // Set dir where to save downloaded pages
+    void setPagesDir(const char* pagesDir);
+    
     bool startCrawl(const std::string& mainPageUrl);
     
-    
-    
-    void saveToDisk();
-    
+    /*
+     * Saves data about pages in the following format:
+     * Url id distance_from_main_page size_in_bytes outgoing_links_ids
+     * where outgoing_links_ids is the list of ids of the pages where we can go by the link from the current page
+     * elements are separated by the space or tabulation
+     */
+    void saveToDisk(const char* filename);
     
     typedef std::unordered_map<Url, PageDetails> UrlsHashTable;
 
@@ -61,6 +68,9 @@ protected:
     size_t pagesDownloadedCounter_;
     std::time_t lastDownloadTime_;
     unsigned downloadInterval_;
+    int minutesTimeStamp_;
+    size_t downloadErrorsCount_;
+    char pagesDir_[256];
 };
 
 #endif // TMK_WEB_CRAWLER_H

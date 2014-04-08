@@ -11,8 +11,9 @@
 typedef std::string Url;
 
 struct PageDetails {
-    typedef size_t PageId
+    typedef size_t PageId;
     typedef size_t ClickDistance;
+    typedef std::vector<size_t> Links;
 
     PageDetails(size_t id = 0, size_t distanceFromMain = 0, size_t sizeInBytes = 0) 
     : id_(id)
@@ -22,7 +23,7 @@ struct PageDetails {
     PageId id_;
     ClickDistance distanceFromMain_;
     size_t sizeInBytes_;
-    std::vector<size_t> outgoingLinks_;
+    Links outgoingLinks_;
 };
 
 class WebCrawler: public htmlcxx::HTML::ParserSax {

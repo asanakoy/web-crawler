@@ -74,14 +74,14 @@ bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
     clearAll();
     boost::smatch result;
     if (!boost::regex_match(mainPageUrl, result, 
-        boost::regex("(.*simple\\.wikipedia\\.org)/wiki/.*"))) {
+        boost::regex("(.*simple\\.wikipedia\\.org)(/wiki/.*)(#.*)"))) {
         std::cout << "Incorrect start page url :(\nI have ability to parse only articles of http://simple.wikipedia.org/\n";
         return false;
     }
     globalUrlPreffix_ = result[1].str();
- 
-    urls_.insert({mainPageUrl, {urls_.size(), currentDistanceFromMain_, 0}});
-    urlQueue_.push({mainPageUrl, 0});
+    std::string startUrl  = result[1].str() + result[2].str();
+    urls_.insert({startUrl, {urls_.size(), currentDistanceFromMain_, 0}});
+    urlQueue_.push({startUrl, 0});
     
     std::string url;
     std::string page;

@@ -11,6 +11,6 @@
 
 *.directory
 curlpp/
-pages/
+pages*/
 
 *.orig

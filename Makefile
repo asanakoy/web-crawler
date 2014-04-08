@@ -2,7 +2,7 @@ DEPS =
 CXXFLAGS=-std=c++11 -I$(CURLPP_INCLUDE_DIR)
 HTMLCXX_SOURCES_ROOT=htmlcxx/html
 
-OBJ=main.o ParserSax.o Node.o WebCrawler.o common.o
+OBJ=main.o ParserSax.o Node.o WebCrawler.o common.o PagesStatist.o
 
 CURLPP_DIR=curlpp
 CURLPP_INCLUDE_DIR=$(CURLPP_DIR)/include

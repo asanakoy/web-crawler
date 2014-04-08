@@ -4,7 +4,7 @@
 
 #include "common.h"
 #include "WebCrawler.h"
-#include "PageStatist.h"
+#include "PagesStatist.h"
 
 class Logger;
 
@@ -28,13 +28,13 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    if (argc == 1) {
-        std::cout << "Do you want to start crawling from page" <<  argv[1] << " ? (Y / N): ";
-        std::string c;
-        cin >> c;
-        if (c != "Y" && c != "y") {
-            return 0;
-        } 
+    if (argc == 2) {
+//         std::cout << "Do you want to start crawling from page" <<  argv[1] << " ? (Y / N): ";
+//         std::string c;
+//         std::cin >> c;
+//         if (c != "Y" && c != "y") {
+//             return 0;
+//         } 
         WebCrawler crawler(100000);
         crawler.setDownloadInterval(0);
         if (!crawler.startCrawl(argv[1]))
@@ -44,16 +44,16 @@ int main(int argc, char **argv) {
     } else {
 
         TMK_LOG("reading pagesData.txt\n");
-        PagesStatist statist("pagesData.txt");
+        PagesStatist statist(std::string("pagesData.txt"));
         statist.calculatePageRank();
 
         std::vector<Url> top20;
         std::vector<size_t> pagesSize;
-        std::vector<size_t> pagesOutgoingLinksCount;
+        
 
-        statist.GetTopPages(20, top20);
-        statist.GetPageSizesInBytes(pagesSize);
-        statist.GetPagesOutgoingLinksCount(pagesOutgoingLinksCount);
+        statist.getTopPages(20, top20);
+        statist.getPageSizesInBytes(pagesSize);
+        const std::vector<size_t>& pagesOutgoingLinksCount = statist.getPagesOutgoingLinksCount();
     }
     
     return 0;

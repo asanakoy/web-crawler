@@ -1,10 +1,38 @@
 simple web-crawler
+It's purpose is to crawl simple.wikipedia.org'
+------------------
 
 Run:
 1. need to intall curl lib 
 2. $ make curlpp
 3. $ make
-4. $ ./web-crawler --crawl URL
+4. $ ./web-crawler --crawl http://simple.wikipedia.org/wiki/Main_Page
+5. $ ./web-crawler --stat data/pagesData_total.txt
+
+While crawling app creates restore-points
+If the crawling was interrupted - you can resume crawling from restore point.
+Just run ./web-crawler --resume-crawl restore_point_file
+Example: Just run  $ ./web-crawler --resume-crawl data/pagesData_5
+
+Options:
+--crawl START_URL - crawl starting with start url and obtain inforamtion for pages.
+For each page we obtain: outgoing links,  all pages that refers to curren (incoming links),  
+distance inclicks from the start page,  size of the page in bytes.
+
+--resume-crawl FILE - the same as --crawl,  but we restore crawler's internal state from FILE.
+
+--stat FILE - read the inforamtion about pages obtained while crawling and separate different data,  
+calculate Page Rank for each page. 
+All the data are stored into dir data/
+Prints top 20 pages by Page Rank.
+
+Application writes log into file log-crawl.txt while crawling and into log-stat.txt while running with option --stat.
+
+Only links matching pattern "(.*simple\\.wikipedia\\.org)?(/wiki/.*?)(#.*)?" are downloaded.
+All trailing text after # is omitted. And all such links are counted as one link.
+
+------------------
 
 Draw histogrmas: 
 python drawHists.py data/pageSize.txt data/pageInLinks.txt data/pageOutLinks.txt data/pageDistances.txt
+This script will show you Histogram of pages' sizes, Histogram of incoming links for pages, Histogram of outgoing links for pages and will save Histogram of distances from main page in clicks into file pageDistances.png

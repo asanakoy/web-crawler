@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         crawler.saveToDisk("data/pagesData_total.txt");
 
     } else  if (strcmp(argv[1], "--resume-crawl") == 0) {
-        Logger::setOutputFile("log-crawl_test.txt");
+        Logger::setOutputFile("log-crawl.txt");
 
         WebCrawler crawler(120000);
         crawler.setDownloadInterval(5);
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
         crawler.saveToDisk("data/pagesData_total.txt");
 
     } else if (strcmp(argv[1], "--stat") == 0) {
-        Logger::setOutputFile("log-stat_test.txt");
+        Logger::setOutputFile("log-stat.txt");
         PagesStatist statist(argv[2]);
 
         const std::vector<PR>& pageRank = statist.getPageRank();

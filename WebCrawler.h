@@ -42,6 +42,13 @@ public:
     bool startCrawl(const std::string& mainPageUrl);
     
     /*
+     * Resume crawl.
+     * Load state from file. File format should be like in saveToDist method.
+     * All pages with size 0 wiil be scheduled to download.
+     */
+    bool resumeCrawl(const char* pagesDataFilePath);
+   
+    /*
      * Saves data about pages in the following format:
      * Url id distance_from_main_page size_in_bytes outgoing_links_ids
      * where outgoing_links_ids is the list of ids of the pages where we can go by the link from the current page
@@ -54,15 +61,22 @@ public:
 protected:
     void clearAll();
     // throws curlpp::RuntimeError and curlpp::LogicError
-    void downloadPage(const std::string& url, std::string& oPage);
+    void downloadPage(const std::string& url, PageDetails::PageId id, std::string& oPage);
+    
+    void crawl();
+    
+    void initFromFile(const char* pagesDataFilePath);
     
     virtual void foundTag(htmlcxx::HTML::Node node, bool isEnd);
     
     bool processUrl(const std::string& url, std::string& outUrl);
     
+    static bool less(const std::pair<Url, PageDetails::ClickDistance>& a,
+                     const std::pair<Url, PageDetails::ClickDistance>& b);
+                 
     std::string globalUrlPreffix_;
     boost::regex urlRegex_;
-    UrlsHashTable urls_;
+    UrlsHashTable urlsData_;
     size_t currentDistanceFromMain_; // current Distance From the Main page in clicks
     Url currentUrl_;
     std::queue<std::pair<Url, PageDetails::ClickDistance> > urlQueue_; // pairs (url, distance_from_main_page)

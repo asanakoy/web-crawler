@@ -17,10 +17,10 @@ void WebCrawler::setPagesDir(const char* pagesDir) {
     strcpy(pagesDir_, pagesDir);
 }
 
-void WebCrawler::downloadPage(const std::string& url, std::string& oPage) {
+void WebCrawler::downloadPage(const std::string& url, PageDetails::PageId id, std::string& oPage) {
         // That's all that is needed to do cleanup of used resources (RAII style).
         std::ostringstream os;
-        TMK_LOG_ALL("Downloading url %zu: %s\n", pagesDownloadedCounter_, url.c_str());
+        TMK_LOG_ALL("Downloading url %zu: %s\n", id, url.c_str());
         
         unsigned delay = difftime(time(NULL), lastDownloadTime_) * 1000;
         if (delay < downloadInterval_ ) {
@@ -29,13 +29,14 @@ void WebCrawler::downloadPage(const std::string& url, std::string& oPage) {
         }
        
         time(&lastDownloadTime_);
-        pagesDownloadedCounter_++;
+        
         os << curlpp::options::Url(url) << std::endl;
+        pagesDownloadedCounter_++;
         
         oPage = os.str();
         
         char fileName[256];
-        sprintf(fileName, "%s/%zu.html", pagesDir_, pagesDownloadedCounter_);
+        sprintf(fileName, "%s/%zu.html", pagesDir_, id);
         FILE *pFile = fopen(fileName, "w");
         if (!pFile) {
             TMK_LOG_ALL("Error: failed to open file for writing %s\n", fileName);
@@ -50,7 +51,7 @@ WebCrawler::WebCrawler(std::size_t numberOfUrls)
     : ParserSax()
     , globalUrlPreffix_("")
     , urlRegex_("(.*simple\\.wikipedia\\.org)?(/wiki/.*?)(#.*)?")
-    , urls_(numberOfUrls)
+    , urlsData_(numberOfUrls)
     , currentDistanceFromMain_(0)
     , currentUrl_("")
     , pagesDownloadedCounter_(0)
@@ -72,30 +73,13 @@ void WebCrawler::clearAll() {
     currentUrl_ = "";
     currentDistanceFromMain_ = 0;
     pagesDownloadedCounter_ = 0;
-    urls_.clear();
+    urlsData_.clear();
     urlQueue_ = std::queue<std::pair<std::string, size_t> >();
     lastDownloadTime_ = 0;
-    minutesTimeStamp_ = 0;
     downloadErrorsCount_ = 0;
 }
 
-bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
-    TMK_LOG_ALL("Starting crawling...\n");    
-    clearAll();
-    time_t t = time(NULL);
-    struct tm *tmp = gmtime(&t);
-    minutesTimeStamp_ = tmp->tm_min;
-    boost::smatch result;
-    if (!boost::regex_match(mainPageUrl, result, 
-        boost::regex("(.*simple\\.wikipedia\\.org)(/wiki/.*?)(#.*)?"))) {
-        std::cout << "Incorrect start page url :(\nI have ability to parse only articles of http://simple.wikipedia.org/\n";
-        return false;
-    }
-    globalUrlPreffix_ = result[1].str();
-    std::string startUrl  = result[1].str() + result[2].str();
-    urls_.insert({startUrl, {urls_.size(), currentDistanceFromMain_, 0}});
-    urlQueue_.push({startUrl, 0});
-    
+void WebCrawler::crawl() {
     std::string url;
     std::string page;
     while (!urlQueue_.empty() /*&& pagesDownloadedCounter_ < 30*/) {
@@ -104,8 +88,8 @@ bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
         urlQueue_.pop();
 
         try {
-            downloadPage(currentUrl_, page);
-            urls_[currentUrl_].sizeInBytes_ = strlen(page.c_str());
+            downloadPage(currentUrl_, urlsData_[currentUrl_].id_, page);
+            urlsData_[currentUrl_].sizeInBytes_ = strlen(page.c_str());
             parse(page);
         }
         catch (curlpp::RuntimeError &e) {
@@ -123,8 +107,38 @@ bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
             sprintf(filename, "data/pagesData_%zu", pagesDownloadedCounter_ / 10000);
             saveToDisk(filename);
         }
-        
     }
+}
+
+bool WebCrawler::startCrawl(const std::string& mainPageUrl) {
+    TMK_LOG_ALL("Starting crawling...\n");    
+    clearAll();
+    boost::smatch result;
+    if (!boost::regex_match(mainPageUrl, result, 
+        boost::regex("(.*simple\\.wikipedia\\.org)(/wiki/.*?)(#.*)?"))) {
+        std::cout << "Incorrect start page url :(\nI have ability to parse only articles of http://simple.wikipedia.org/\n";
+        return false;
+    }
+    globalUrlPreffix_ = result[1].str();
+    std::string startUrl  = result[1].str() + result[2].str();
+    urlsData_.insert({startUrl, {urlsData_.size(), currentDistanceFromMain_, 0}});
+    urlQueue_.push({startUrl, 0});
+    
+    crawl();
+    
+    TMK_LOG_ALL("Crawling successfully finished!\n"); 
+    TMK_LOG_ALL("Pages downloaded: %zu\n", pagesDownloadedCounter_); 
+    TMK_LOG_ALL("Download errors occured: %zu\n", downloadErrorsCount_);
+    return true;
+}
+
+bool WebCrawler::resumeCrawl(const char* pagesDataFilePath) {
+    TMK_LOG_ALL("Resuming crawling...\n"); 
+    clearAll();
+    initFromFile(pagesDataFilePath);
+    
+    crawl();
+    
     TMK_LOG_ALL("Crawling successfully finished!\n"); 
     TMK_LOG_ALL("Pages downloaded: %zu\n", pagesDownloadedCounter_); 
     TMK_LOG_ALL("Download errors occured: %zu\n", downloadErrorsCount_);
@@ -160,14 +174,14 @@ void WebCrawler::foundTag(htmlcxx::HTML::Node node, bool isEnd) {
                 return;
             }
             
-            auto pair = urls_.insert({processedHref, {urls_.size(), currentDistanceFromMain_, 0}});
+            auto pair = urlsData_.insert({processedHref, {urlsData_.size(), currentDistanceFromMain_, 0}});
             if (pair.second) {// means that urs is unique
                 TMK_FLOG("Url %s added\n", processedHref.c_str());
                 urlQueue_.push({processedHref, currentDistanceFromMain_ + 1});
                 
             }
-            if (urls_[currentUrl_].id_ != pair.first->second.id_)
-                urls_[currentUrl_].outgoingLinks_.insert(pair.first->second.id_);   
+            if (urlsData_[currentUrl_].id_ != pair.first->second.id_)
+                urlsData_[currentUrl_].outgoingLinks_.insert(pair.first->second.id_);   
         }
     }
 }
@@ -180,8 +194,8 @@ void WebCrawler::saveToDisk(const char* filePath) {
         return;
     }
     
-    fprintf(urlsMapFile, "%zu\n", urls_.size());   
-    for (auto it = urls_.begin(); it!=urls_.end(); ++it)
+    fprintf(urlsMapFile, "%zu\n", urlsData_.size());   
+    for (auto it = urlsData_.begin(); it!=urlsData_.end(); ++it)
     {
         fprintf(urlsMapFile, "%s \t %zu \t %zu \t %zu \t", 
                 it->first.c_str(), 
@@ -198,4 +212,71 @@ void WebCrawler::saveToDisk(const char* filePath) {
     }
     fclose(urlsMapFile);
     TMK_LOG_ALL("Page data have been successfully saved!\n"); 
+}
+
+void WebCrawler::initFromFile(const char* pagesDataFilePath) {
+    TMK_LOG_ALL("Initializing crawler from file...\n");
+    TMK_LOG_ALL("Reading data from %s\n", pagesDataFilePath);
+    std::ifstream fin(pagesDataFilePath);
+    if (!fin) {
+        TMK_LOG_ALL("Error opening '%s' for reading\n", pagesDataFilePath);
+        return;
+    }
+    size_t n;
+    fin >> n;
+    fin.get();
+    urlsData_.reserve(n);
+
+    Url url;
+    // Items for UrlQueue
+    std::vector<std::pair<Url, PageDetails::ClickDistance> > items;
+    
+    PageDetails::PageId id;
+    
+    std::string line;
+    
+    while (std::getline(fin, line)) {
+        std::istringstream sin(line);
+        sin >> url;
+        
+        PageDetails details;
+        sin >> details.id_ >> details.distanceFromMain_ >> details.sizeInBytes_;
+        
+        if (details.sizeInBytes_ == 0) 
+            items.push_back({url, details.distanceFromMain_});
+        
+        PageDetails::Links& links =  urlsData_.insert({url, details}).first->second.outgoingLinks_;
+        PageDetails::PageId linkedPageId;
+        while (sin >> linkedPageId) {
+            assert(linkedPageId < n && "ooops");
+            if (linkedPageId != id)
+                links.insert(linkedPageId);
+        }
+    }
+    
+    assert(n == urlsData_.size() && "oops! The input data is malformed!");
+    
+    boost::smatch result;
+    if (!boost::regex_match(urlsData_.begin()->first, result, 
+        boost::regex("(.*simple\\.wikipedia\\.org)(/wiki/.*?)"))) {
+        TMK_LOG_ALL("Incorrect page url %s\nI have ability to parse only articles of http://simple.wikipedia.org/\n",
+                    urlsData_.begin()->first.c_str());
+        TMK_LOG_ALL("The input data is malformed!\n");
+        return;
+    }
+    globalUrlPreffix_ = result[1].str();
+    
+    std::sort(items.begin(), items.end(), WebCrawler::less);
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        urlQueue_.push(*it);
+    }
+    pagesDownloadedCounter_ = urlsData_.size() - items.size();
+    
+    TMK_LOG_ALL("Data have been read!\n");
+}
+
+bool WebCrawler::less(const std::pair<Url, PageDetails::ClickDistance>& a,
+                             const std::pair<Url, PageDetails::ClickDistance>& b)
+{
+    return a.second < b.second;
 }

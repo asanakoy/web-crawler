@@ -26,12 +26,22 @@ int main(int argc, char **argv) {
     if (strcmp(argv[1], "--crawl") == 0) {
         Logger::setOutputFile("log-crawl_test.txt");
 
-        WebCrawler crawler(100000);
+        WebCrawler crawler(120000);
         crawler.setDownloadInterval(0);
         crawler.setPagesDir("data_test/pages_test");
         if (!crawler.startCrawl(argv[2]))
             return 0;
         crawler.saveToDisk("data_test/pagesData_total.txt");
+
+    } else  if (strcmp(argv[1], "--resume-crawl") == 0) {
+        Logger::setOutputFile("log-crawl_test.txt");
+
+        WebCrawler crawler(120000);
+        crawler.setDownloadInterval(0);
+        crawler.setPagesDir("pages");
+        if (!crawler.resumeCrawl(argv[2]))
+            return 0;
+        crawler.saveToDisk("data/pagesData_total.txt");
 
     } else if (strcmp(argv[1], "--stat") == 0) {
         Logger::setOutputFile("log-stat_test.txt");

@@ -4,7 +4,7 @@ Run:
 1. need to intall curl lib 
 2. $ make curlpp
 3. $ make
-4. $ ./web-crawler
+4. $ ./web-crawler --crawl URL
 
 Draw histogrmas: 
-python drawHists.py data_test/pageSize.txt data_test/pageInLinks.txt data_test/pageOutLinks.txt data_test/pageDistances.txt
+python drawHists.py data/pageSize.txt data/pageInLinks.txt data/pageOutLinks.txt data/pageDistances.txt

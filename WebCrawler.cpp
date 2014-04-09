@@ -30,8 +30,9 @@ void WebCrawler::downloadPage(const std::string& url, PageDetails::PageId id, st
        
         time(&lastDownloadTime_);
         
-        os << curlpp::options::Url(url) << std::endl;
         pagesDownloadedCounter_++;
+        os << curlpp::options::Url(url) << std::endl;
+        
         
         oPage = os.str();
         
@@ -101,10 +102,10 @@ void WebCrawler::crawl() {
             downloadErrorsCount_++;
         }
         
-        if (pagesDownloadedCounter_ % 10000 == 0) {
+        if (pagesDownloadedCounter_ % 2000 == 0) {
             // If something goes wrong we will have some piece of data.
             char filename[256];
-            sprintf(filename, "data/pagesData_%zu", pagesDownloadedCounter_ / 10000);
+            sprintf(filename, "data/pagesData_%zu", pagesDownloadedCounter_ / 2000);
             saveToDisk(filename);
         }
     }
@@ -242,15 +243,13 @@ void WebCrawler::initFromFile(const char* pagesDataFilePath) {
         PageDetails details;
         sin >> details.id_ >> details.distanceFromMain_ >> details.sizeInBytes_;
         
-        if (details.sizeInBytes_ == 0) 
+        if (details.sizeInBytes_ == 0) {
             items.push_back({url, details.distanceFromMain_});
-        
+        }        
         PageDetails::Links& links =  urlsData_.insert({url, details}).first->second.outgoingLinks_;
         PageDetails::PageId linkedPageId;
         while (sin >> linkedPageId) {
             assert(linkedPageId < n && "ooops");
-            if (linkedPageId != id)
-                links.insert(linkedPageId);
         }
     }
     

@@ -4,6 +4,7 @@
 #include <boost/regex.hpp>
 #include <iostream>
 #include <unordered_map>
+#include <set>
 #include <queue>
 #include <ctime>
 
@@ -14,7 +15,7 @@ typedef std::string Url;
 struct PageDetails {
     typedef size_t PageId;
     typedef size_t ClickDistance;
-    typedef std::vector<size_t> Links;
+    typedef std::set<size_t> Links;
 
     PageDetails(size_t id = 0, size_t distanceFromMain = 0, size_t sizeInBytes = 0) 
     : id_(id)

@@ -60,6 +60,15 @@ int main(int argc, char **argv) {
         TMK_LOG_ALL("Saving pages incoming links count to file\n");
         tmk::saveToDisk(pagesIncomingLinksCount, "data_test/pageInLinks.txt");
         
+        const std::vector<size_t>& pageDistancesFromMain = statist.getPageDistancesFromMain();
+        TMK_LOG_ALL("Saving pages distances from main page to file\n");
+        tmk::saveToDisk(pageDistancesFromMain, "data_test/pageDistances.txt");
+        size_t maxPageDist = 0;
+        for (auto it = pageDistancesFromMain.begin(); it != pageDistancesFromMain.end(); ++it) {
+            maxPageDist = std::max(maxPageDist, *it);
+        }
+        TMK_LOG_ALL("Maximal distance from main page: %zu\n", maxPageDist);
+        
     } else {
         printUsage(argv[0]);
     }

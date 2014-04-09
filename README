@@ -5,3 +5,6 @@ Run:
 2. $ make curlpp
 3. $ make
 4. $ ./web-crawler
+
+Draw histogrmas: 
+python drawHists.py data_test/pageSize.txt data_test/pageInLinks.txt data_test/pageOutLinks.txt data_test/pageDistances.txt

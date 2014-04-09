@@ -166,7 +166,8 @@ void WebCrawler::foundTag(htmlcxx::HTML::Node node, bool isEnd) {
                 urlQueue_.push({processedHref, currentDistanceFromMain_ + 1});
                 
             }
-            urls_[currentUrl_].outgoingLinks_.push_back(pair.first->second.id_);   
+            if (urls_[currentUrl_].id_ != pair.first->second.id_)
+                urls_[currentUrl_].outgoingLinks_.insert(pair.first->second.id_);   
         }
     }
 }

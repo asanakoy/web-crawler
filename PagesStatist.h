@@ -39,6 +39,8 @@ public:
     
     const std::string& GetUrlById(PageDetails::PageId id) const;
     
+    const std::vector<size_t>& getPageDistancesFromMain() const;
+    
 protected:
     void calculatePageRank() const;
     
@@ -52,6 +54,7 @@ protected:
 	mutable std::vector<size_t> pagesOutgoingLinksCount_;
     mutable std::vector<size_t> pagesIncomingLinksCount_;
 	mutable std::vector<std::pair<PageDetails::PageId, PR> > idsSortedbByPr_;
+    mutable std::vector<PageDetails::ClickDistance> pageDistancesFromMain_;
 };
 
 #endif // TMK_PAGES_STATIST_H

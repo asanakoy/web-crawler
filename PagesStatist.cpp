@@ -33,12 +33,12 @@ PagesStatist::PagesStatist(const char* pagesDataFilePath) {
         
         sin >> pageDetails_[id].distanceFromMain_ >> pageDetails_[id].sizeInBytes_;
         urls_[id] = url;
-        
-        std::vector<PageDetails::PageId>& links = pageDetails_[id].outgoingLinks_;
+        PageDetails::Links& links = pageDetails_[id].outgoingLinks_;
         PageDetails::PageId linkedPageId;
         while (sin >> linkedPageId) {
             assert(linkedPageId < n && "ooops");
-            links.push_back(linkedPageId);
+            if (linkedPageId != id)
+                links.insert(linkedPageId);
         }
     }
 	
@@ -70,7 +70,6 @@ void PagesStatist::calculatePageRank() const {
             if (pagesOutgoingLinksCount_[id] != 0) {
                 for (auto it = pageDetails_[id].outgoingLinks_.begin(); it != pageDetails_[id].outgoingLinks_.end(); ++it) 
                 {
-                    //TMK_LOG("tmpPageRank[*it] = %f\n", tmpPageRank[*it]);
                     pageRank_[*it] += tmpPageRank[id] / pagesOutgoingLinksCount_[id];
                     if (flag[*it] != valueVisited) {
                         q.push(*it);
@@ -82,11 +81,6 @@ void PagesStatist::calculatePageRank() const {
 
         delta = 0;
         for (int i = 0; i < pageRank_.size(); ++i) {
-             if (delta < pageRank_[i] - tmpPageRank[i]) {
-                TMK_LOG("delta = %f\n", delta);
-                TMK_LOG("pageRank_[i] - tmpPageRank[i] = %f\n", pageRank_[i] - tmpPageRank[i]);
-                TMK_LOG("pageRank_[%zu] = %f\n", i, pageRank_[i]);
-            }
             delta = std::max(delta, pageRank_[i] - tmpPageRank[i]);
            
         }
@@ -152,6 +146,16 @@ const std::vector<size_t>& PagesStatist::getPagesIncomingLinksCount() const {
         }
     }
     return pagesIncomingLinksCount_;
+}
+
+const std::vector<size_t>& PagesStatist::getPageDistancesFromMain() const {
+    if (pageDistancesFromMain_.size() == 0) {
+        pageDistancesFromMain_.assign(pageDetails_.size(), 0);
+        for (auto it = pageDetails_.begin(); it != pageDetails_.end(); ++it) {
+            pageDistancesFromMain_[it->id_] = it->distanceFromMain_;
+        }
+    }
+    return pageDistancesFromMain_;
 }
 
 const std::string& PagesStatist::GetUrlById(PageDetails::PageId id) const {
